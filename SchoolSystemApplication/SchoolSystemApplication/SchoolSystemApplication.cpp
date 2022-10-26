@@ -5,7 +5,7 @@
 
 int main()
 {
-    std::cout << "im the better Alex no I't the better Alecx\n";
+    std::cout << "im the better Alex no I't the better Alecx welcome to that studio\n";
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu

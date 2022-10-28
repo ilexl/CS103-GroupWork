@@ -14,7 +14,6 @@ using std::endl;
 using std::vector;
 using std::string;
 
-using grades = vector<grade> * ; // simplifies mutliple grades
 
 /// <summary>
 /// holds a gender m, f, o
@@ -53,6 +52,8 @@ struct grade {
 	}
 };
 
+using grades = vector<grade> * ; // simplifies mutliple grades
+
 /// <summary>
 /// Holds day and week as a date
 /// </summary>
@@ -88,79 +89,6 @@ string GetRawInput(string prompt, bool newline = false);
 void Error(string msg);
 
 #pragma endregion
-
-/// <summary>
-/// entry point to the program
-/// </summary>
-/// <returns>exit status</returns>
-int main()
-{
-	user _user;
-
-	school* _school = new school();
-	int classrooms = _school->PopulateClassrooms();
-	if (classrooms == 0) {
-		_school->NewSchoolScreen();
-	}
-	else {
-		_school->Welcome();
-	}
-
-	// loop while program is active
-	bool running = true;
-	while (running) {
-		_school->MenuScreen(_user.loggedIn); // intro screen for main options
-
-		string rawInput = GetRawInput("Your selection : "); // input
-		try {
-			int input = stoi(rawInput); // parsed input
-			
-			// deal with input accordingly
-			switch (input)
-			{
-			case 1: { // login / logout
-				if (_user.loggedIn) {
-					_user.Logout();
-				}
-				else {
-					_user.Login();
-				}
-				break;
-			}
-			case 2: { // exit
-				// may have to save data?? TODO: make sure exit is safe
-				_school->Exit();
-				_user.Exit();
-				running = false;
-				break;
-			}
-			case 3: { // if a user is logged in, op 3 is more options
-				if (_user.loggedIn) {
-					_user.Options(_school);
-				}
-				else {
-					Error("invalid input...");
-				}
-				break;
-			}
-			default: {
-				Error("invalid input...");
-				break;
-			}
-			}
-		}
-		catch (...) {
-			Error("invalid input..."); // error is parse fails, i.e, rawInput isn't a string
-		}
-		// deal with input
-		// exit if requried
-	}
-
-	delete _school;
-	_school = nullptr;
-
-	return 0; // Exit the program with no issues
-}
 
 #pragma region classes
 /// <summary>
@@ -281,9 +209,9 @@ public:
 
 
 
+		report temp = report("test", gender::male, NULL, learningProgress::achieved);
 
-
-		return; // -------------- temp return void to prevent error --------------
+		return temp; // -------------- temp return void to prevent error --------------
 	}
 
 	/// <summary>
@@ -310,8 +238,11 @@ public:
 	/// Exit code called for destructors
 	/// </summary>
 	void Exit() {
-		delete reports;
-		reports = nullptr;
+		if (reports != nullptr) {
+			reports->erase(reports->begin(), reports->end());
+			delete reports;
+			reports = nullptr;
+		}
 	}
 };
 
@@ -351,7 +282,7 @@ public:
 	/// Edits the roll if the logged in user has the correct credentials
 	/// </summary>
 	/// <param name="credentials">the login details</param>
-	void EditRoll(login credentials) {
+	void EditRoll() {
 		// TODO implement the edit roll feature
 	}
 
@@ -375,11 +306,14 @@ public:
 	/// Exit code called for destructors
 	/// </summary>
 	void Exit() {
-		for (student _student : *students) {
-			_student.Exit();
+		if (students != nullptr) {
+			for (student _student : *students) {
+				_student.Exit();
+			}
+			students->erase(students->begin(), students->end());
+			delete students;
+			students = nullptr;
 		}
-		delete students;
-		students = nullptr;
 	}
 
 };
@@ -418,7 +352,7 @@ public:
 
 
 
-
+		
 		Welcome(); // start welcome like normal after setup
 	}
 
@@ -453,12 +387,15 @@ public:
 	/// Exit code called for destructors
 	/// </summary>
 	void Exit() {
-		for(classroom _classroom : *classrooms)
-		{
-			_classroom.Exit();
+		if (classrooms != nullptr) {
+			for (classroom _classroom : *classrooms)
+			{
+				_classroom.Exit();
+			}
+			classrooms->erase(classrooms->begin(), classrooms->end());
+			delete classrooms;
+			classrooms = nullptr;
 		}
-		delete classrooms;
-		classrooms = nullptr;
 	}
 
 
@@ -599,10 +536,10 @@ string gtos(gender _gender) {
 		return "other";
 		break;
 	default:
-		return "ERROR - gtos couldn't convert gender to a string...";
+		Error("ERROR - gtos couldn't convert gender to a string...");
 		break;
 	}
-	return;
+	return "";
 }
 
 /// <summary>
@@ -623,10 +560,10 @@ string lptos(learningProgress _learningProgress) {
 		return "NEEDS HELP";
 		break;
 	default:
-		return "ERROR - lptos couldn't convert learningProgress to a string...";
+		Error("ERROR - lptos couldn't convert learningProgress to a string...");
 		break;
 	}
-	return;
+	return "";
 }
 
 /// <summary>
@@ -635,7 +572,7 @@ string lptos(learningProgress _learningProgress) {
 /// <param name="prompt">display to the console before getting input</param>
 /// <param name="newline">newline before input or not</param>
 /// <returns>raw input from console</returns>
-string GetRawInput(string prompt, bool newline = false) {
+string GetRawInput(string prompt, bool newline) {
 	cout << prompt;
 	
 	if (newline) { cout << endl; }
@@ -656,6 +593,80 @@ void Error(string msg) {
 	cout << "***************\n";
 }
 
-
-
 #pragma endregion
+
+
+
+/// <summary>
+/// entry point to the program
+/// </summary>
+/// <returns>exit status</returns>
+int main()
+{
+	user _user;
+
+	school* _school = new school();
+	int classrooms = _school->PopulateClassrooms();
+	if (classrooms == 0) {
+		_school->NewSchoolScreen();
+	}
+	else {
+		_school->Welcome();
+	}
+
+	// loop while program is active
+	bool running = true;
+	while (running) {
+		_school->MenuScreen(_user.loggedIn); // intro screen for main options
+
+		string rawInput = GetRawInput("Your selection : "); // input
+		try {
+			int input = stoi(rawInput); // parsed input
+
+			// deal with input accordingly
+			switch (input)
+			{
+			case 1: { // login / logout
+				if (_user.loggedIn) {
+					_user.Logout();
+				}
+				else {
+					_user.Login();
+				}
+				break;
+			}
+			case 2: { // exit
+				// may have to save data?? TODO: make sure exit is safe
+				_school->Exit();
+				_user.Exit();
+				running = false;
+				break;
+			}
+			case 3: { // if a user is logged in, op 3 is more options
+				if (_user.loggedIn) {
+					_user.Options(_school);
+				}
+				else {
+					Error("invalid input...");
+				}
+				break;
+			}
+			default: {
+				Error("invalid input...");
+				break;
+			}
+			}
+		}
+		catch (...) {
+			Error("invalid input..."); // error is parse fails, i.e, rawInput isn't a string
+		}
+		// deal with input
+		// exit if requried
+	}
+
+	delete _school;
+	_school = nullptr;
+
+	return 0; // Exit the program with no issues
+}
+

@@ -98,9 +98,9 @@ int main()
 	user _user;
 
 	school* _school = new school();
-	int classrooms = _school->populateClassrooms();
+	int classrooms = _school->PopulateClassrooms();
 	if (classrooms == 0) {
-		_school->newSchoolScreen();
+		_school->NewSchoolScreen();
 	}
 	else {
 		_school->Welcome();
@@ -109,7 +109,7 @@ int main()
 	// loop while program is active
 	bool running = true;
 	while (running) {
-		_school->IntroScreen(_user.loggedIn); // intro screen for main options
+		_school->MenuScreen(_user.loggedIn); // intro screen for main options
 
 		string rawInput = GetRawInput("Your selection : "); // input
 		try {
@@ -395,6 +395,9 @@ class school {
 	vector<string>* datesEvents;
 
 public:
+	/// <summary>
+	/// welcome screen
+	/// </summary>
 	void Welcome() {
 		cout << "*******************************************\n";
 		cout << "Welcome to " << schoolName << endl;
@@ -402,7 +405,10 @@ public:
 		cout << endl;
 	}
 
-	void newSchoolScreen() {
+	/// <summary>
+	/// sets up the school
+	/// </summary>
+	void NewSchoolScreen() {
 		// TODO implement new school screen
 
 
@@ -416,13 +422,21 @@ public:
 		Welcome(); // start welcome like normal after setup
 	}
 
-	int populateClassrooms() {
+	/// <summary>
+	/// loads school classrooms from files
+	/// </summary>
+	/// <returns>the amount of classrooms</returns>
+	int PopulateClassrooms() {
 		// TODO load from file system
 
-		return 0;
+		return 0; // 0 default
 	}
 
-	void IntroScreen(bool loggedIn) {
+	/// <summary>
+	/// displays the menu screen for user to see options
+	/// </summary>
+	/// <param name="loggedIn"></param>
+	void MenuScreen(bool loggedIn) {
 		cout << "Options:\n";
 		if (loggedIn) {
 			cout << "1. Logout\n";

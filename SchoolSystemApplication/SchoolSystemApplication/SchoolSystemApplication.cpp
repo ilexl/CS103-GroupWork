@@ -352,7 +352,7 @@ public:
 
 
 
-
+		
 		Welcome(); // start welcome like normal after setup
 	}
 
@@ -593,8 +593,6 @@ void Error(string msg) {
 	cout << "***************\n";
 }
 
-
-
 #pragma endregion
 
 
@@ -671,3 +669,4 @@ int main()
 
 	return 0; // Exit the program with no issues
 }
+

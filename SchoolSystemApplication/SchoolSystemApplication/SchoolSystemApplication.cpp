@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <fstream>
 
 using std::cin;
 using std::cout;
@@ -72,16 +73,6 @@ struct date {
 		this->week = week;
 	}
 };
-
-class student;
-class classroom;
-class report;
-class school;
-class teacher;
-class parent;
-class admin;
-class login;
-class user;
 
 string gtos(gender _gender);
 string lptos(learningProgress _learningProgress);
@@ -344,7 +335,7 @@ public:
 	/// </summary>
 	void NewSchoolScreen() {
 		// TODO implement new school screen
-
+		cout << "DEBUG::NEWSCHOOLSCREEN FUNCTION NOT IMPLEMENTED BUT CALLED\n";
 
 
 
@@ -514,6 +505,21 @@ public:
 		
 	}
 };
+
+class file {
+public:
+	static void GetClassroomFile(string className) {
+
+	}
+
+	static void GetStudentReports(int studentNumber) {
+
+	}
+
+	static void GetAllLogins() {
+
+	}
+};
 #pragma endregion
 
 #pragma region functions
@@ -595,77 +601,82 @@ void Error(string msg) {
 
 #pragma endregion
 
-
-
 /// <summary>
 /// entry point to the program
 /// </summary>
 /// <returns>exit status</returns>
 int main()
 {
-	user _user;
+	bool testing = true;
 
-	school* _school = new school();
-	int classrooms = _school->PopulateClassrooms();
-	if (classrooms == 0) {
-		_school->NewSchoolScreen();
+	if (testing) {
+		file::GetClassroomFile("testdocument");
 	}
 	else {
-		_school->Welcome();
-	}
+		user _user;
 
-	// loop while program is active
-	bool running = true;
-	while (running) {
-		_school->MenuScreen(_user.loggedIn); // intro screen for main options
+		school* _school = new school();
+		int classrooms = _school->PopulateClassrooms();
+		if (classrooms == 0) {
+			_school->NewSchoolScreen();
+		}
+		else {
+			_school->Welcome();
+		}
 
-		string rawInput = GetRawInput("Your selection : "); // input
-		try {
-			int input = stoi(rawInput); // parsed input
+		// loop while program is active
+		bool running = true;
+		while (running) {
+			_school->MenuScreen(_user.loggedIn); // intro screen for main options
 
-			// deal with input accordingly
-			switch (input)
-			{
-			case 1: { // login / logout
-				if (_user.loggedIn) {
-					_user.Logout();
+			string rawInput = GetRawInput("Your selection : "); // input
+			try {
+				int input = stoi(rawInput); // parsed input
+
+				// deal with input accordingly
+				switch (input)
+				{
+				case 1: { // login / logout
+					if (_user.loggedIn) {
+						_user.Logout();
+					}
+					else {
+						_user.Login();
+					}
+					break;
 				}
-				else {
-					_user.Login();
+				case 2: { // exit
+					// may have to save data?? TODO: make sure exit is safe
+					_school->Exit();
+					_user.Exit();
+					running = false;
+					break;
 				}
-				break;
-			}
-			case 2: { // exit
-				// may have to save data?? TODO: make sure exit is safe
-				_school->Exit();
-				_user.Exit();
-				running = false;
-				break;
-			}
-			case 3: { // if a user is logged in, op 3 is more options
-				if (_user.loggedIn) {
-					_user.Options(_school);
+				case 3: { // if a user is logged in, op 3 is more options
+					if (_user.loggedIn) {
+						_user.Options(_school);
+					}
+					else {
+						Error("invalid input...");
+					}
+					break;
 				}
-				else {
+				default: {
 					Error("invalid input...");
+					break;
 				}
-				break;
+				}
 			}
-			default: {
-				Error("invalid input...");
-				break;
+			catch (...) {
+				Error("invalid input..."); // error is parse fails, i.e, rawInput isn't a string
 			}
-			}
+			// deal with input
+			// exit if requried
 		}
-		catch (...) {
-			Error("invalid input..."); // error is parse fails, i.e, rawInput isn't a string
-		}
-		// deal with input
-		// exit if requried
-	}
 
-	delete _school;
-	_school = nullptr;
+		delete _school;
+		_school = nullptr;
+	}
 
 	return 0; // Exit the program with no issues
 }

@@ -1,2 +1,4 @@
 ﻿  SchoolSystemApplication.cpp
+C:\Users\270168960\OneDrive - UP Education\GitHub\CS103-GroupWork\SchoolSystemApplication\SchoolSystemApplication\SchoolSystemApplication.cpp(283,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\270168960\OneDrive - UP Education\GitHub\CS103-GroupWork\SchoolSystemApplication\SchoolSystemApplication\SchoolSystemApplication.cpp(499,21): warning C4018: '<': signed/unsigned mismatch
   SchoolSystemApplication.vcxproj -> C:\Users\270168960\OneDrive - UP Education\GitHub\CS103-GroupWork\SchoolSystemApplication\Debug\SchoolSystemApplication.exe

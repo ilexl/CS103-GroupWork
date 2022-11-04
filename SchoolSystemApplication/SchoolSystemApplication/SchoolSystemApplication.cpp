@@ -84,6 +84,7 @@ string gtos(gender _gender);
 string lptos(learningProgress _learningProgress);
 string GetRawInput(string prompt, bool newline = false);
 void Error(string msg);
+void Title(string t, int len = 40);
 
 #pragma endregion
 
@@ -160,6 +161,7 @@ public:
 	vector<vector<string>>* schoolData;
 	vector<vector<string>>* studentData;
 	vector<vector<string>>* loginData;
+	vector<vector<string>>* staffData;
 
 	/// <summary>
 	/// Loads csv file from Drive to Memory
@@ -176,11 +178,13 @@ public:
 		schoolData->clear();
 		studentData->clear();
 		loginData->clear();
+		staffData->clear();
 
 		this->LoadCSV("classroom.csv", classroomData);
 		this->LoadCSV("school.csv", schoolData);
 		this->LoadCSV("students.csv", studentData);
 		this->LoadCSV("logins.csv", loginData);
+		this->LoadCSV("staff.csv", staffData);
 	}
 
 	/// <summary>
@@ -191,6 +195,7 @@ public:
 		this->SaveCSV("school.csv", schoolData);
 		this->SaveCSV("students.csv", studentData);
 		this->SaveCSV("logins.csv", loginData);
+		this->SaveCSV("staff.csv", staffData);
 	}
 
 	file()
@@ -199,6 +204,7 @@ public:
 		schoolData = new vector<vector<string>>();
 		studentData = new vector<vector<string>>();
 		loginData = new vector<vector<string>>();
+		staffData = new vector<vector<string>>();
 	}
 };
 
@@ -280,7 +286,7 @@ public:
 			_gender = gender::other;
 		}
 		
-		for (int i = 2; i < row.size() - 1; i++) {
+		for (int i = 2; (unsigned)i < (unsigned)row.size() - 1; i++) {
 			vector<string> innerRow;
 			innerRow.clear();
 			std::stringstream istream(row[i]);
@@ -422,6 +428,93 @@ public:
 			reports = nullptr;
 		}
 	}
+
+
+
+	static int CreateNew(file* allData) {
+		int studentNumber = 0;
+		bool studentNumCorrect = false;
+		while (studentNumCorrect == false) {
+			string s = GetRawInput("Enter the student number : ");
+			try {
+				studentNumber = stoi(s);
+				studentNumCorrect = true;
+			}
+			catch (...) {
+				Error("That is not a number...");
+			}
+		}
+
+		for (vector<string> v : *allData->studentData) {
+			if (v[0] == std::to_string(studentNumber)) {
+				Error("Student already exists...");
+				return NULL;
+			}
+		}
+
+		string studentName = GetRawInput("Enter student's full name : ");
+
+		student s = student(studentName, studentNumber, allData, true);
+		vector<string> sv;
+		sv.push_back(std::to_string(studentNumber));
+		sv.push_back(studentName);
+		allData->studentData->push_back(sv);
+		allData->SaveAll();
+
+		return studentNumber;
+	}
+
+	/// <summary>
+	/// help
+	/// </summary>
+	/// <param name="classroomNumber"></param>
+	/// <param name=""></param>
+	static void DeleteStudent(file* allData, int studentNumber) {
+		bool confirm = true;
+		while (confirm) {
+			cout << "Confirm delete student -> " << studentNumber << endl;
+			string rawInput = GetRawInput("y or n : ");
+			if (rawInput == "n") {
+				cout << "\nStudent was NOT deleted...\n\n";
+				return;
+			}
+			else if(rawInput == "y") {
+				confirm = false;
+			}
+			else {
+				Error("Invalid Input...");
+			}
+		}
+
+		// Delete student here
+		for (int i = 0; (unsigned)i < (unsigned)allData->studentData->size(); i++) {
+			vector<string> v = (*allData->studentData)[i];
+			if (v[0] == std::to_string(studentNumber)) {
+				v.clear();
+				allData->studentData->erase(allData->studentData->begin() + i);
+				allData->SaveAll();
+				cout << "\nStudent Deleted...\n\n";
+				return;
+			}
+		}
+
+		Error("Student not found...");
+	}
+
+	static void EditStudent(file* allData, int studentNumber) {
+		// Load student
+
+
+
+	}
+
+	static void DisplayAllStudents(file* allData) {
+		vector<vector<string>>* studentData = allData->studentData;
+		Title("All Students");
+		for (vector<string> v : *studentData) {
+			cout << "Student " << v[0] << " - " << v[1] << endl;
+		}
+	}
 };
 
 /// <summary>
@@ -496,7 +589,7 @@ public:
 
 	void AddStudent(int studentNumber) {
 		bool studentFound = false;
-		for (int i = 0; i < allData->studentData->size(); i++) {
+		for (int i = 0; (unsigned)i < (unsigned)allData->studentData->size(); i++) {
 			if (stoi((*allData->studentData)[i][0]) == studentNumber) {
 				studentFound = true;
 				student s = student((*allData->studentData)[i][1], stoi((*allData->studentData)[i][0]), allData, false);
@@ -525,6 +618,90 @@ public:
 		students = new vector<student>();
 	}
 
+
+
+
+	static void CreateNew(file* allData) {
+		int classroomNumber = 0;
+		bool classNumCorrect = false;
+		while (classNumCorrect == false) {
+			string s = GetRawInput("Enter the classroom number : ");
+			try {
+				classroomNumber = stoi(s);
+				classNumCorrect = true;
+			}
+			catch (...) {
+				Error("That is not a number...");
+			}
+		}
+
+		for (vector<string> v : *allData->classroomData) {
+			if (v[0] == std::to_string(classroomNumber)) {
+				Error("Classroom already exists...");
+				return;
+			}
+		}
+
+		classroom c = classroom(classroomNumber, allData);
+		vector<string> toData;
+		toData.push_back(std::to_string(classroomNumber));
+		bool end = false;
+		cout << "Instuctions : \n";
+		cout << "Enter a student number to add a student to the classroom or \n";
+		cout << "enter 'e' to stop entering students into the classroom.\n\n";
+		while (end == false) {
+			string s = GetRawInput("Enter student number : ");
+			int sNum = 0;
+			if (s[0] == 'e') {
+				end = true;
+				break;
+			}
+			else {
+				try {
+					sNum = stoi(s);
+					c.AddStudent(sNum);
+					toData.push_back(std::to_string(sNum));
+				}
+				catch (...) {
+					Error("Not a valid number input...");
+				}
+			}
+		}
+		allData->classroomData->push_back(toData); // store new classroom data and save it to file
+		allData->SaveAll();
+	}
+
+	static void DeleteClassroom(file* allData, int classroomNumber) {
+		bool confirm = true;
+		while (confirm) {
+			cout << "Confirm delete classroom -> " << classroomNumber << endl;
+			string rawInput = GetRawInput("y or n : ");
+			if (rawInput == "n") {
+				cout << "\nClassroom was NOT deleted...\n\n";
+				return;
+			}
+			else if (rawInput == "y") {
+				confirm = false;
+			}
+			else {
+				Error("Invalid Input...");
+			}
+		}
+
+		// Delete student here
+		for (int i = 0; (unsigned)i < (unsigned)allData->classroomData->size(); i++) {
+			vector<vector<string>> ve = *allData->classroomData;
+			vector<string> v = ve[i];
+			if (v[0] == std::to_string(classroomNumber)) {
+				v.clear();
+				allData->classroomData->erase(allData->classroomData->begin() + i);
+				cout << "\nClassroom Deleted...\n\n";
+				return;
+			}
+		}
+
+		Error("Classroom not found...");
+	}
 };
 
 /// <summary>
@@ -543,7 +720,7 @@ public:
 	/// welcome screen
 	/// </summary>
 	void Welcome() {
-		cout << "*******************************************\n";
+		cout << "****************************************\n";
 		cout << "Welcome to " << schoolName << endl;
 		cout << "Contact details " << contactDetails << endl;
 		cout << endl;
@@ -655,158 +832,6 @@ public:
 };
 
 /// <summary>
-/// admin login
-/// </summary>
-class admin {
-	file* allData;
-
-
-public:
-	/// <summary>
-	/// Exit code called for destructors
-	/// </summary>
-	void Exit() {
-
-	}
-
-	/// <summary>
-	/// Creates a classroom with input
-	/// </summary>
-	void CreateClassroom() {
-		int classroomNumber = 0;
-		bool classNumCorrect = false;
-		while (classNumCorrect == false) {
-			string s = GetRawInput("Enter the classroom number : ");
-			try {
-				classroomNumber = stoi(s);
-				classNumCorrect = true;
-			}
-			catch (...) {
-				Error("That is not a number...");
-			}
-		}
-
-		for (vector<string> v : *allData->classroomData) {
-			if (v[0] == std::to_string(classroomNumber)) {
-				Error("Classroom already exists...");
-				return;
-			}
-		}
-
-		classroom c = classroom(classroomNumber, allData);
-		vector<string> toData;
-		toData.push_back(std::to_string(classroomNumber));
-		bool end = false;
-		cout << "Instuctions : \n";
-		cout << "Enter a student number to add a student to the classroom or \n";
-		cout << "enter 'e' to stop entering students into the classroom.\n\n";
-		while (end == false) {
-			string s = GetRawInput("Enter student number : ");
-			int sNum = 0;
-			if (s[0] == 'e') {
-				end = true;
-				break;
-			}
-			else {
-				try {
-					sNum = stoi(s);
-					c.AddStudent(sNum);
-					toData.push_back(std::to_string(sNum));
-				}
-				catch (...) {
-					Error("Not a valid number input...");
-				}
-			}
-		}
-		allData->classroomData->push_back(toData); // store new classroom data and save it to file
-		allData->SaveAll();
-	}
-
-	/// <summary>
-	/// Creates a student with input
-	/// </summary>
-	void CreateStudent() {
-		int studentNumber = 0;
-		bool studentNumCorrect = false;
-		while (studentNumCorrect == false) {
-			string s = GetRawInput("Enter the student number : ");
-			try {
-				studentNumber = stoi(s);
-				studentNumCorrect = true;
-			}
-			catch (...) {
-				Error("That is not a number...");
-			}
-		}
-
-		for (vector<string> v : *allData->studentData) {
-			if (v[0] == std::to_string(studentNumber)) {
-				Error("Student already exists...");
-				return;
-			}
-		}
-
-		string studentName = GetRawInput("Enter student's full name : ");
-
-		student s = student(studentName, studentNumber, allData, true);
-		vector<string> sv;
-		sv.push_back(std::to_string(studentNumber));
-		sv.push_back(studentName);
-		allData->studentData->push_back(sv);
-		allData->SaveAll();
-	}
-
-	/// <summary>
-	/// Displays admin options menu
-	/// </summary>
-	void Options() {
-		bool inAdminOptions = true;
-		while (inAdminOptions) {
-			cout << "Options : \n";
-			cout << "0. Back to main menu\n";
-			cout << "1. Create Student\n";
-			cout << "2. Create Class\n";
-		
-			string rawIn = GetRawInput("Selection : ");
-			try {
-				int selection = stoi(rawIn);
-				switch (selection) {
-				case 0: {
-					inAdminOptions = false;
-					break;
-				}
-				case 1: {
-					CreateStudent();
-					break;
-				}
-				case 2: {
-					CreateClassroom();
-					break;
-				}
-				default:{
-					string crash = "Im gonna crash the try (;";
-					int crash_now = stoi(crash);
-				}
-				}
-			}
-			catch (...) {
-				Error("Not a valid selection...");
-			}
-		}
-	}
-
-	
-	/// <summary>
-	/// ctor for the admin
-	/// </summary>
-	admin(file * alldata)
-	{
-		this->allData = alldata;
-	}
-
-};
-
-/// <summary>
 /// teacher login
 /// </summary>
 class teacher {
@@ -821,7 +846,187 @@ public:
 
 	}
 
+	/// <summary>
+	/// Creates a new teacher
+	/// </summary>
+	/// <param name="allData">program file management data</param>
+	/// <returns></returns>
+	static void CreateNew(file* allData) {
+		Title("Create Teacher");
 
+		int teacherNumber;
+		string name;
+		int classroom;
+		gender _gender = gender::other;
+		string DOB;
+		string email;
+		string contactNumber;
+		int yearTeach;
+
+		// number
+		bool moreInfoNeeded = true;
+		while (moreInfoNeeded) {
+			string in = GetRawInput("Enter teacher number : ");
+			try {
+				int i = stoi(in);
+				teacherNumber = i;
+				moreInfoNeeded = false;
+
+				for (vector<string> v : *allData->staffData) {
+					if (v[0] == std::to_string(teacherNumber)) {
+						Error("Teacher number already exists...");
+						moreInfoNeeded = true;
+					}
+				}
+			}
+			catch (...) {
+				Error("Not a valid input...");
+			}
+		}
+
+		// name
+		moreInfoNeeded = true;
+		while (moreInfoNeeded) {
+			string in = GetRawInput("Enter teacher name : ");
+			name = in;
+			moreInfoNeeded = false;
+		}
+
+		// classroom
+		moreInfoNeeded = true;
+		while (moreInfoNeeded) {
+			// TODO print all classroom numbers??
+			string in = GetRawInput("Enter teacher classroom number : ");
+			try {
+				int i = stoi(in);
+				classroom = i;
+				moreInfoNeeded = false;
+			}
+			catch (...) {
+				Error("Not a valid classroom number...");
+			}
+		}
+
+		// gender
+		moreInfoNeeded = true;
+		while (moreInfoNeeded) {
+			string in = GetRawInput("Enter gender (1. male, 2. female, 3. other) : ");
+			try {
+				if (in == "1") {
+					_gender = gender::male;
+					moreInfoNeeded = false;
+				}
+				else if (in == "2") {
+					_gender = gender::female;
+					moreInfoNeeded = false;
+				}
+				else if (in == "3") {
+					_gender = gender::other;
+					moreInfoNeeded = false;
+				}
+				else {
+					string a = "a";
+					int c = stoi(a);
+				}
+			}
+			catch(...){
+				Error("Not a valid input...");
+			}
+			moreInfoNeeded = false;
+		}
+
+		// DOB
+		moreInfoNeeded = true;
+		while (moreInfoNeeded) {
+			string in = GetRawInput("Enter teacher DOB \"DD/MM/YYYY\" : ");
+			DOB = in;
+			moreInfoNeeded = false;
+		}
+
+		// email
+		moreInfoNeeded = true;
+		while (moreInfoNeeded) {
+			string in = GetRawInput("Enter teacher email : ");
+			email = in;
+			moreInfoNeeded = false;
+		}
+
+		// contact number
+		moreInfoNeeded = true;
+		while (moreInfoNeeded) {
+			string in = GetRawInput("Enter teacher contact number : ");
+			contactNumber = in;
+			moreInfoNeeded = false;
+		}
+
+		// year teach
+		moreInfoNeeded = true;
+		while (moreInfoNeeded) {
+			// TODO print all classroom numbers??
+			string in = GetRawInput("Enter teacher year level teaching : ");
+			try {
+				int i = stoi(in);
+				yearTeach = i;
+				moreInfoNeeded = false;
+			}
+			catch (...) {
+				Error("Not a valid year...");
+			}
+		}
+
+
+
+		// do stuff with info
+
+		vector<string> newTeacherData;
+		newTeacherData.push_back(std::to_string(teacherNumber));
+		newTeacherData.push_back(name);
+		newTeacherData.push_back(std::to_string(classroom));
+		newTeacherData.push_back(gtos(_gender));
+		newTeacherData.push_back(email);
+		newTeacherData.push_back(contactNumber);
+		newTeacherData.push_back(std::to_string(yearTeach));
+
+		allData->staffData->push_back(newTeacherData);
+		allData->SaveAll();
+
+		cout << "\nTeacher Created\n\n";
+	}
+
+	/// <summary>
+	/// Deletes a teacher
+	/// </summary>
+	static void DeleteTeacher(file* allData, int teacherNumber) {
+		bool confirm = true;
+		while (confirm) {
+			cout << "Confirm delete teacher -> " << teacherNumber << endl;
+			string rawInput = GetRawInput("y or n : ");
+			if (rawInput == "n") {
+				cout << "\nTeacher was NOT deleted...\n\n";
+				return;
+			}
+			else if (rawInput == "y") {
+				confirm = false;
+			}
+			else {
+				Error("Invalid Input...");
+			}
+		}
+
+		// Delete teacher here
+		for (int i = 0; (unsigned)i < (unsigned)allData->staffData->size(); i++) {
+			vector<vector<string>> ve = *allData->staffData;
+			vector<string> v = ve[i];
+			if (v[0] == std::to_string(teacherNumber)) {
+				v.clear();
+				allData->staffData->erase(allData->staffData->begin() + i);
+				cout << "\nTeacher Deleted...\n\n";
+				return;
+			}
+		}
+
+		Error("Teacher not found...");
+	}
 };
 
 /// <summary>
@@ -840,6 +1045,608 @@ public:
 
 	}
 
+	/// <summary>
+	/// Creates a new parent
+	/// </summary>
+	static void CreateNew(file* allData) {
+		string name = GetRawInput("Enter parent name : ");
+		string username;
+		bool usernameCopy = true;
+		while (usernameCopy) {
+			username = GetRawInput("Enter parent username : ");
+			usernameCopy = false;
+			for (vector<string> v : *allData->loginData) {
+				if (v[0] == username) {
+					usernameCopy = true;
+					Error("Username already exists...");
+				}
+			}
+		}
+		string password = GetRawInput("Enter parent password : ");
+		int studentNumber;
+		bool getSN = true;
+		while (getSN) {
+			try {
+				studentNumber = stoi(GetRawInput("Enter student number : "));
+				getSN = false;
+			}
+			catch (...) {
+				Error("Invalid Input...");
+			}
+		}
+
+		vector<string> newLoginParent;
+		newLoginParent.push_back(username);
+		newLoginParent.push_back(password);
+		newLoginParent.push_back("parent");
+		newLoginParent.push_back(name);
+		newLoginParent.push_back(std::to_string(studentNumber));
+
+		allData->loginData->push_back(newLoginParent);
+		allData->SaveAll();
+
+		cout << "\nParent Created...\n\n";
+	}
+
+
+	static void DeleteParent(file* allData, string username) {
+		bool confirm = true;
+		while (confirm) {
+			cout << "Confirm delete parent -> " << username << endl;
+			string rawInput = GetRawInput("y or n : ");
+			if (rawInput == "n") {
+				cout << "\nParent was NOT deleted...\n\n";
+				return;
+			}
+			else if (rawInput == "y") {
+				confirm = false;
+			}
+			else {
+				Error("Invalid Input...");
+			}
+		}
+
+		// Delete parent here
+		for (int i = 0; (unsigned)i < (unsigned)allData->loginData->size(); i++) {
+			vector<string> v = (*allData->loginData)[i];
+			if (v[0] == username) {
+				v.clear();
+				allData->loginData->erase(allData->loginData->begin() + i);
+				allData->SaveAll();
+				cout << "\nParent Deleted...\n\n";
+				return;
+			}
+		}
+
+		Error("Parent not found...");
+	}
+};
+
+/// <summary>
+/// admin login
+/// </summary>
+class admin {
+	file* allData;
+
+#pragma region AdminOptionsFunctions
+
+#pragma region Create
+	/// <summary>
+	/// Creates a teacher
+	/// </summary>
+	void CreateTeacher() {
+		teacher::CreateNew(allData);
+
+		// Create login for teacher here
+	}
+
+	/// <summary>
+	/// Creates a parent
+	/// </summary>
+	void CreateParent() {
+		parent::CreateNew(allData);
+	}
+
+	/// <summary>
+	/// Creates an admin
+	/// </summary>
+	void CreateAdmin() {
+		// Create Admin Login
+	}
+
+	/// <summary>
+	/// Creates a classroom with input
+	/// </summary>
+	void CreateClassroom() {
+		classroom::CreateNew(allData); // Creates a new classroom
+	}
+
+	/// <summary>
+	/// Creates a student with input
+	/// </summary>
+	void CreateStudent() {
+		int studentNumber = student::CreateNew(allData);
+		// use studentNumber to create a login
+		// Create login for student here
+	}
+#pragma endregion
+
+#pragma region Edit
+	/// <summary>
+	/// Edits a teacher
+	/// </summary>
+	void EditTeacher() {
+
+	}
+
+	/// <summary>
+	/// Edits a parent
+	/// </summary>
+	void EditParent() {
+
+	}
+
+	/// <summary>
+	/// Edits an admin
+	/// </summary>
+	void EditAdmin() {
+
+	}
+
+	/// <summary>
+	/// Edits a classroom with input
+	/// </summary>
+	void EditClassroom() {
+
+	}
+
+	/// <summary>
+	/// Edits a student with input
+	/// </summary>
+	void EditStudent() {
+
+	}
+#pragma endregion
+
+#pragma region Delete
+	/// <summary>
+	/// Deletes a teacher
+	/// </summary>
+	void DeleteTeacher() {
+		bool pre = true;
+		while (pre) {
+			cout << "Would you like to see a list of teachers\n";
+			string rawInput = GetRawInput("y or n");
+			if (rawInput == "y") {
+				// TODO display all teachers
+
+				pre = false;
+			}
+			else if (rawInput == "n") {
+
+				pre = false;
+			}
+			else {
+				Error("Invalid Input...");
+			}
+		}
+
+		pre = true;
+		while (pre) {
+			string rawInput = GetRawInput("Enter teacher number or 'c' to cancel : ");
+			if (rawInput == "c") {
+				cout << "\nOperation Cancelled\n\n";
+				return;
+			}
+			try {
+				int number = stoi(rawInput);
+				teacher::DeleteTeacher(allData, number);
+			}
+			catch (...) {
+				Error("Invalid Input...");
+			}
+		}
+
+
+		// Delete login on delete
+	}
+
+	/// <summary>
+	/// Deletes a parent
+	/// </summary>
+	void DeleteParent() {
+		bool pre = true;
+		while (pre) {
+			cout << "Would you like to see a list of parents\n";
+			string rawInput = GetRawInput("y or n");
+			if (rawInput == "y") {
+				// TODO display all classrooms
+
+				pre = false;
+			}
+			else if (rawInput == "n") {
+
+				pre = false;
+			}
+			else {
+				Error("Invalid Input...");
+			}
+		}
+
+		pre = true;
+		while (pre) {
+			string rawInput = GetRawInput("Enter parent username or 'c' to cancel : ");
+			if (rawInput == "c") {
+				cout << "\nOperation Cancelled\n\n";
+				return;
+			}
+			try {
+				parent::DeleteParent(allData, rawInput);
+			}
+			catch (...) {
+				Error("Invalid Input...");
+			}
+		}
+
+
+		// Delete login on delete
+	}
+
+	/// <summary>
+	/// Deletes an admin
+	/// </summary>
+	void DeleteAdmin() {
+		// TODO Delete admin login
+	}
+
+	/// <summary>
+	/// Deletes a classroom
+	/// </summary>
+	void DeleteClassroom() {
+		bool pre = true;
+		while (pre) {
+			cout << "Would you like to see a list of classrooms\n";
+			string rawInput = GetRawInput("y or n");
+			if (rawInput == "y") {
+				// TODO display all classrooms
+
+				pre = false;
+			}
+			else if (rawInput == "n") {
+
+				pre = false;
+			}
+			else {
+				Error("Invalid Input...");
+			}
+		}
+
+		pre = true;
+		while (pre) {
+			string rawInput = GetRawInput("Enter classroom number or 'c' to cancel : ");
+			if (rawInput == "c") {
+				cout << "\nOperation Cancelled\n\n";
+				return;
+			}
+			try {
+				int number = stoi(rawInput);
+				classroom::DeleteClassroom(allData, number);
+			}
+			catch (...) {
+				Error("Invalid Input...");
+			}
+		}
+	}
+
+	/// <summary>
+	/// Deletes a student
+	/// </summary>
+	void DeleteStudent() {
+		bool pre = true;
+		while (pre) {
+			cout << "Would you like to see a list of students\n";
+			string rawInput = GetRawInput("y or n");
+			if (rawInput == "y") {
+				// TODO display all students
+
+				pre = false;
+			}
+			else if (rawInput == "n") {
+
+				pre = false;
+			}
+			else {
+				Error("Invalid Input...");
+			}
+		}
+
+		pre = true;
+		while (pre) {
+			string rawInput = GetRawInput("Enter student number or 'c' to cancel : ");
+			if (rawInput == "c") {
+				cout << "\nOperation Cancelled\n\n";
+				return;
+			}
+			try {
+				int number = stoi(rawInput);
+				student::DeleteStudent(allData, number);
+			}
+			catch (...) {
+				Error("Invalid Input...");
+			}
+		}
+	}
+#pragma endregion
+
+#pragma endregion
+
+public:
+	/// <summary>
+	/// Exit code called for destructors
+	/// </summary>
+	void Exit() {
+
+	}
+
+	/// <summary>
+	/// Displays admin options menu and deals with user actions / input
+	/// </summary>
+	void Options() {
+		bool inAdminOptions = true;
+		while (inAdminOptions) {
+			cout << "\n";
+			Title("Admin Options Menu");
+			cout << "Options : \n";
+			cout << "0. Back to main menu\n";
+			cout << "1. Student   Options\n";
+			cout << "2. Parent    Options\n";
+			cout << "3. Teacher   Options\n";
+			cout << "4. Classroom Options\n";
+			cout << "5. School    Options\n";
+			cout << "6. Admin     Options\n";
+		
+			string rawIn = GetRawInput("Selection : ");
+			cout << endl;
+			try {
+				int selection = stoi(rawIn);
+				bool inSubMenu = true;
+				switch (selection) {
+				case 0: {
+					inAdminOptions = false;
+					break;
+				}
+				case 1: { // Show student options
+					while (inSubMenu) {
+						cout << "Student Options : \n";
+						cout << "0. Back to admin menu\n";
+						cout << "1. Add New Student\n";
+						cout << "2. Edit    Student\n";
+						cout << "3. Delete  Student\n";
+
+						string rawInSub = GetRawInput("Selection : ");
+						int subSelection = stoi(rawInSub);
+						cout << endl;
+
+						switch (subSelection)
+						{
+						case 0: 
+							inSubMenu = false;
+							break;
+						case 1: {
+							Title("Creating New Student");
+							CreateStudent();
+							break;
+						}
+						case 2: {
+							Title("Editing Student");
+							EditStudent();
+							break;
+						}
+						case 3: {
+							Title("Delete Student");
+							DeleteStudent();
+							break;
+						}
+						default:// crash the program -> cause error input
+							string crashSub = "Im gonna crash the try (;";
+							int crash_nowSub = stoi(crashSub);
+							break;
+						}
+					}
+					break;
+				}
+				case 2: { // Show parent options
+					while (inSubMenu) {
+						cout << "Parent Options : \n";
+						cout << "0. Back to admin menu\n";
+						cout << "1. Add New Parent\n";
+						cout << "2. Edit    Parent\n";
+						cout << "3. Delete  Parent\n";
+
+						string rawInSub = GetRawInput("Selection : ");
+						int subSelection = stoi(rawInSub);
+						cout << endl;
+
+						switch (subSelection)
+						{
+						case 0:
+							inSubMenu = false;
+							break;
+						case 1: {
+							CreateParent();
+							break;
+						}
+						case 2: {
+							EditParent();
+							break;
+						}
+						case 3: {
+							DeleteParent();
+							break;
+						}
+						default:// crash the program -> cause error input
+							string crashSub = "Im gonna crash the try (;";
+							int crash_nowSub = stoi(crashSub);
+							break;
+						}
+					}
+					break;
+				}
+				case 3: { // Show teacher options
+					while (inSubMenu) {
+						cout << "Teacher Options : \n";
+						cout << "0. Back to admin menu\n";
+						cout << "1. Add New Teacher\n";
+						cout << "2. Edit    Teacher\n";
+						cout << "3. Delete  Teacher\n";
+
+						string rawInSub = GetRawInput("Selection : ");
+						int subSelection = stoi(rawInSub);
+						cout << endl;
+
+						switch (subSelection)
+						{
+						case 0:
+							inSubMenu = false;
+							break;
+						case 1: {
+							CreateTeacher();
+							break;
+						}
+						case 2: {
+							EditTeacher();
+							break;
+						}
+						case 3: {
+							DeleteTeacher();
+							break;
+						}
+						default:// crash the program -> cause error input
+							string crashSub = "Im gonna crash the try (;";
+							int crash_nowSub = stoi(crashSub);
+							break;
+						}
+					}
+					break;
+				}
+				case 4: { // Show classroom options
+					while (inSubMenu) {
+						cout << "Classroom Options : \n";
+						cout << "0. Back to admin menu\n";
+						cout << "1. Add New Classroom\n";
+						cout << "2. Edit    Classroom\n";
+						cout << "3. Delete  Classroom\n";
+
+						string rawInSub = GetRawInput("Selection : ");
+						int subSelection = stoi(rawInSub);
+						cout << endl;
+
+						switch (subSelection)
+						{
+						case 0:
+							inSubMenu = false;
+							break;
+						case 1: {
+							CreateClassroom();
+							break;
+						}
+						case 2: {
+							EditClassroom();
+							break;
+						}
+						case 3: {
+							DeleteClassroom();
+							break;
+						}
+						default:// crash the program -> cause error input
+							string crashSub = "Im gonna crash the try (;";
+							int crash_nowSub = stoi(crashSub);
+							break;
+						}
+					}
+					break;
+				}
+				case 5: { // Show school options
+					while (inSubMenu) {
+						cout << "School Options : \n";
+						cout << "0. Back to admin menu\n";
+						cout << "1. Needs Implementing\n";
+
+
+						string rawInSub = GetRawInput("Selection : ");
+						int subSelection = stoi(rawInSub);
+						switch (subSelection)
+						{
+						case 0:
+							inSubMenu = false;
+							break;
+						case 1: {
+							cout << "EDIT SCHOOL NEEDS IMPLEMENTING\n";
+						}
+						default:// crash the program -> cause error input
+							string crashSub = "Im gonna crash the try (;";
+							int crash_nowSub = stoi(crashSub);
+							break;
+						}
+					}
+					break;
+				}
+				case 6: { // Show admin options
+					while (inSubMenu) {
+						cout << "Admin Options : \n";
+						cout << "0. Back to admin menu\n";
+						cout << "1. Add New Admin\n";
+						cout << "2. Edit    Admin\n";
+						cout << "3. Delete  Admin\n";
+
+						string rawInSub = GetRawInput("Selection : ");
+						int subSelection = stoi(rawInSub);
+						cout << endl;
+
+						switch (subSelection)
+						{
+						case 0:
+							inSubMenu = false;
+							break;
+						case 1: {
+							CreateAdmin();
+							break;
+						}
+						case 2: {
+							EditAdmin();
+							break;
+						}
+						case 3: {
+							DeleteAdmin();
+							break;
+						}
+						default:// crash the program -> cause error input
+							string crashSub = "Im gonna crash the try (;";
+							int crash_nowSub = stoi(crashSub);
+							break;
+						}
+					}
+					break;
+				}
+				default:{ // crash the program -> cause error input
+					string crash = "Im gonna crash the try (;";
+					int crash_now = stoi(crash);
+				}
+				}
+			}
+			catch (...) {
+				Error("Not a valid selection...");
+			}
+		}
+	}
+
+	/// <summary>
+	/// ctor for the admin
+	/// </summary>
+	admin(file * alldata)
+	{
+		this->allData = alldata;
+	}
 
 };
 
@@ -953,9 +1760,41 @@ string GetRawInput(string prompt, bool newline) {
 /// </summary>
 /// <param name="msg">msg to display</param>
 void Error(string msg) {
-	cout << "*****ERROR*****\n";
+	cout << "**********ERROR**********\n";
 	cout << msg << endl;
-	cout << "***************\n";
+	cout << "*************************\n";
+}
+
+void Title(string t, int len) {
+	int sLength = t.length();
+
+	for (int i = 0; i < len; i++) {
+		cout << "-";
+	}
+
+	cout << endl;
+
+	int count = 0;
+	for (int i = 0; i < (int)len/2 - (int)(sLength / 2); i++) {
+		cout << "-";
+		count++;
+	}
+
+	cout << t;
+	count += sLength;
+
+	for (int i = count; i < len; i++) {
+		cout << "-";
+		count++;
+	}
+
+	cout << endl;
+
+	for (int i = 0; i < len; i++) {
+		cout << "-";
+	}
+
+	cout << endl;
 }
 
 #pragma endregion
@@ -969,6 +1808,8 @@ int main()
 	const bool DEBUG = true;
 
 	if (DEBUG) {
+		Title("DEBUG");
+
 		file* allFiles = new file();
 		allFiles->LoadAll();
 
@@ -1115,17 +1956,18 @@ int main()
 }
 
 
-// Student data
-/*
-   [0] = number
-   [1] = name
-   [2] = report 1
-   [3] = report 2 and so on ...
-*/
+// TODO:
+// Create Login -> CreateStudent -> Admin
+// Create Login -> CreateTeacher -> Admin
+// Create Login -> CreateParent  -> Admin
+// Create Login -> CreateAdmin  -> Admin
 
-// Class data
-/* 
-   [0] = number
-   [1] = student 1 number
-   [2] = student 2 number and so on...
-*/
+// Delete Login -> DeleteAdmin -> Admin
+// Delete Login -> DeleteParent -> Admin
+// Delete Login -> DeleteStudent -> Admin
+// Delete Login -> DeleteTeacher -> Admin
+
+// Show list -> Edit and Delete Any -> Admin
+// Show list classroom -> CreateNew -> Parent
+
+// All Admin Edits??

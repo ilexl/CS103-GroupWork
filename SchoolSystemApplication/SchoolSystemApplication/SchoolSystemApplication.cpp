@@ -3,6 +3,10 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <cstring>
+#include <fstream>
+#include <sstream>
+#include <Windows.h>
 
 using std::cin;
 using std::cout;
@@ -13,6 +17,8 @@ using std::endl;
 
 using std::vector;
 using std::string;
+using std::fstream;
+using std::ios;
 
 
 /// <summary>
@@ -91,6 +97,121 @@ void Error(string msg);
 #pragma endregion
 
 #pragma region classes
+class file {
+	fstream fileStreamer;
+
+	void LoadCSV(string fileName, vector<vector<string>>* data) {
+
+		fileStreamer.open(fileName, ios::in | ios::beg);
+		if (!fileStreamer.is_open()) {
+			// Save blank file if no file exists
+			fileStreamer.open(fileName, ios::out); // overwrite save
+			fileStreamer.close();
+			fileStreamer.open(fileName, ios::in | ios::beg);
+		}
+
+		if (!fileStreamer.is_open()) {
+			Error("Unable to open CSV files...");
+			return;
+			// Error and return void if still unable to open file...
+		}
+
+		string line, word;
+		vector<string> row;
+		while (getline(fileStreamer, line, '\n')) { // Each row
+			row.clear();
+			std::stringstream stream(line);
+			while (getline(stream, word, ',')) { // Each collumn
+				row.push_back(word); // add cell to row vector
+			}
+			data->push_back(row); // add copy of row to fileContent vector
+		}
+
+		fileStreamer.close();
+	}
+
+	void SaveCSV(string fileName, vector<vector<string>>* data) {
+		fileStreamer.open(fileName, ios::out); // overwrite
+		if (fileStreamer.is_open()) {
+			for (int vIndex = 0; (unsigned)vIndex < (unsigned)data->size(); vIndex++) {
+				vector<string>* v = new vector<string>();
+				for (string s : (*data)[vIndex]) {
+					v->push_back(s);
+				}
+
+				for (int sIndex = 0; (unsigned)sIndex < (unsigned)v->size(); sIndex++) {
+					string s = (*v)[sIndex];
+					fileStreamer << s;
+					if (sIndex != v->size() - 1) {
+						fileStreamer << ',';
+					}
+				}
+				fileStreamer << endl;
+
+
+				v->clear();
+				delete v;
+				v = nullptr;
+			}
+			fileStreamer.close();
+		}
+		else {
+			Error("Unable to save CSV file...");
+			return;
+		}
+	}
+public:
+
+	vector<vector<string>>* classroomData;
+	vector<vector<string>>* schoolData;
+	vector<vector<string>>* studentData;
+	vector<vector<string>>* loginData;
+	vector<vector<string>>* staffData;
+
+	/// <summary>
+	/// Loads csv file from Drive to Memory
+	/// </summary>
+	void LoadAll() {
+		// close any existing file stream that may be open
+		fileStreamer = fstream();
+
+		if (fileStreamer.is_open()) {
+			fileStreamer.close();
+		}
+
+		classroomData->clear();
+		schoolData->clear();
+		studentData->clear();
+		loginData->clear();
+		staffData->clear();
+
+		this->LoadCSV("classroom.csv", classroomData);
+		this->LoadCSV("school.csv", schoolData);
+		this->LoadCSV("students.csv", studentData);
+		this->LoadCSV("logins.csv", loginData);
+		this->LoadCSV("staff.csv", staffData);
+	}
+
+	/// <summary>
+	/// Saves all memory in file to csv file
+	/// </summary>
+	void SaveAll() {
+		this->SaveCSV("classroom.csv", classroomData);
+		this->SaveCSV("school.csv", schoolData);
+		this->SaveCSV("students.csv", studentData);
+		this->SaveCSV("logins.csv", loginData);
+		this->SaveCSV("staff.csv", staffData);
+	}
+
+	file()
+	{
+		classroomData = new vector<vector<string>>();
+		schoolData = new vector<vector<string>>();
+		studentData = new vector<vector<string>>();
+		loginData = new vector<vector<string>>();
+		staffData = new vector<vector<string>>();
+	}
+};
 /// <summary>
 /// class which displays and holds a report
 /// </summary>
@@ -405,10 +526,89 @@ public:
 /// login information and functions
 /// </summary>
 class login {
-
-
-
 public:
+
+	static void SignUpTemp(file* allFiles, string userType) {
+
+		string username;
+		string password;
+
+		bool duplicate = true;
+		while (duplicate) {
+			username = GetRawInput("Enter your Username: ");
+			password = GetRawInput("Enter your Password: ");
+
+			duplicate = false;
+			// add loop here
+			for (vector<string> v : *allFiles->loginData) {
+				if (username == v[0]) {
+					cout << "Duplicate found\n";
+					duplicate = true;
+				}
+			}
+		}
+		vector<string> newUserLoginData;
+
+		newUserLoginData.push_back(username);
+		newUserLoginData.push_back(password);
+		newUserLoginData.push_back(userType);
+		
+		allFiles->loginData->push_back(newUserLoginData);
+
+
+		cout << "Your Username and Password have been saved";
+		allFiles->SaveAll();
+	}
+
+	static void LogInTemp(file* allFiles) {
+		string username;
+		string password;
+
+		int index;
+		bool success = false;
+
+		bool duplicateUsername = true;
+		while (duplicateUsername) {
+			username = GetRawInput("Enter your Username: ");
+			duplicateUsername = true;
+			// add loop here
+			for (int i = 0; i < (allFiles->loginData->size()); i++) {
+				vector<string> v = (*allFiles->loginData)[i];
+				if (username == v[0]) {
+					cout << "Username found\n";
+					duplicateUsername = false;
+					index = i;
+				}
+			}
+			if (duplicateUsername) {
+				cout << "No username found";
+			}
+		}
+		
+		for (int i = 0; i < 3; i++) {
+			password = GetRawInput("Enter your Password: ");
+			if (password == (*allFiles->loginData)[index][1]) {
+				cout << "password matches\n";
+				success = true;
+				break;
+			}
+			else {
+				cout << "password wrong...\n";
+			}
+		}
+
+		if (success) {
+			cout << "Successfully logged in...\n";
+		}
+		else {
+			cout << "unsuccessfully logged in, try again later\n";
+			srand(time(NULL));
+			int t = rand() % 300;
+			cout << "You have been locked out for an random amount of time: " << t << " seconds";
+			Sleep (t * 1000);
+			cout << "\n";
+		}
+	}
 
 	auto static Login() {
 
@@ -603,69 +803,90 @@ void Error(string msg) {
 /// <returns>exit status</returns>
 int main()
 {
-	user _user;
+	bool DEBUG = true;
 
-	school* _school = new school();
-	int classrooms = _school->PopulateClassrooms();
-	if (classrooms == 0) {
-		_school->NewSchoolScreen();
+	if (DEBUG) {
+
+		user _user;
+		file* allFiles = new file();
+		allFiles->LoadAll();
+		login::LogInTemp(allFiles);
+		login::SignUpTemp(allFiles, "admin");
+
+		/*(*allFiles->loginData)[0][0] = "bob";
+		(*allFiles->loginData)[0][0] = "password";
+
+		allFiles->SaveAll();*/
+
+
 	}
-	else {
-		_school->Welcome();
-	}
+	else{
 
-	// loop while program is active
-	bool running = true;
-	while (running) {
-		_school->MenuScreen(_user.loggedIn); // intro screen for main options
+		user _user;
 
-		string rawInput = GetRawInput("Your selection : "); // input
-		try {
-			int input = stoi(rawInput); // parsed input
+		school* _school = new school();
+		int classrooms = _school->PopulateClassrooms();
+		if (classrooms == 0) {
+			_school->NewSchoolScreen();
+		}
+		else {
+			_school->Welcome();
+		}
 
-			// deal with input accordingly
-			switch (input)
-			{
-			case 1: { // login / logout
-				if (_user.loggedIn) {
-					_user.Logout();
+		// loop while program is active
+		bool running = true;
+		while (running) {
+			_school->MenuScreen(_user.loggedIn); // intro screen for main options
+
+			string rawInput = GetRawInput("Your selection : "); // input
+			try {
+				int input = stoi(rawInput); // parsed input
+
+				// deal with input accordingly
+				switch (input)
+				{
+				case 1: { // login / logout
+					if (_user.loggedIn) {
+						_user.Logout();
+					}
+					else {
+						_user.Login();
+					}
+					break;
 				}
-				else {
-					_user.Login();
+				case 2: { // exit
+					// may have to save data?? TODO: make sure exit is safe
+					_school->Exit();
+					_user.Exit();
+					running = false;
+					break;
 				}
-				break;
-			}
-			case 2: { // exit
-				// may have to save data?? TODO: make sure exit is safe
-				_school->Exit();
-				_user.Exit();
-				running = false;
-				break;
-			}
-			case 3: { // if a user is logged in, op 3 is more options
-				if (_user.loggedIn) {
-					_user.Options(_school);
+				case 3: { // if a user is logged in, op 3 is more options
+					if (_user.loggedIn) {
+						_user.Options(_school);
+					}
+					else {
+						Error("invalid input...");
+					}
+					break;
 				}
-				else {
+				default: {
 					Error("invalid input...");
+					break;
 				}
-				break;
+				}
 			}
-			default: {
-				Error("invalid input...");
-				break;
+			catch (...) {
+				Error("invalid input..."); // error is parse fails, i.e, rawInput isn't a string
 			}
-			}
+			// deal with input
+			// exit if requried
 		}
-		catch (...) {
-			Error("invalid input..."); // error is parse fails, i.e, rawInput isn't a string
-		}
-		// deal with input
-		// exit if requried
-	}
 
-	delete _school;
-	_school = nullptr;
+		delete _school;
+		_school = nullptr;
+
+	}
 
 	return 0; // Exit the program with no issues
 }

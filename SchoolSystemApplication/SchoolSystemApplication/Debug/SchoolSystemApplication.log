@@ -1,4 +1,0 @@
-﻿  SchoolSystemApplication.cpp
-C:\Users\270037240\OneDrive - UP Education\Documents\GitHub\CS103-GroupWork\SchoolSystemApplication\SchoolSystemApplication\SchoolSystemApplication.cpp(575,22): warning C4018: '<': signed/unsigned mismatch
-C:\Users\270037240\OneDrive - UP Education\Documents\GitHub\CS103-GroupWork\SchoolSystemApplication\SchoolSystemApplication\SchoolSystemApplication.cpp(605,14): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-  SchoolSystemApplication.vcxproj -> C:\Users\270037240\OneDrive - UP Education\Documents\GitHub\CS103-GroupWork\SchoolSystemApplication\Debug\SchoolSystemApplication.exe

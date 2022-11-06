@@ -16,7 +16,8 @@ File formats
 	[0] = username
 	[1] = password
 	[2] = loginType
-	[3] = **for parents only -> name	
-	[4] = **for parents only -> studentNumber
+	[3] = number
 
 // Staff data
+
+// Parent data

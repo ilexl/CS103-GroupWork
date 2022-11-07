@@ -237,9 +237,9 @@ public: // makes accessible outside the class{}
 	}
 };
 
-// Signup function prototype -> declaration order must be after file class
-// Signup signs a user up with a specified user type
+// Signup/DeleteLogin function prototype -> declaration order must be after file 
 void SignUp(file* allFiles, string userType, int number = NULL);
+void DeleteLogin(file* allData, int number, string type);
 
 /// <summary>
 /// a student report with various functions and data
@@ -858,8 +858,12 @@ public:
 	void NewSchoolScreen(file* allFiles) {
 		cout << "Please create an ADMIN account to continue...\n"; // prompt first time setup
 		allFiles->loginData->clear(); // clears any logins already existing -> school isnt setup so admin account is reset and all currect logins deleted
+		allFiles->classroomData->clear();
+		allFiles->parentData->clear();
+		allFiles->studentData->clear();
+		allFiles->staffData->clear();
 		SignUp(allFiles, "admin"); // sign up a new admin for first time setup
-		
+		allFiles->LoadAll();
 		schoolName = "(EDIT SCHOOL NAME)";       // temp insert for first time setup
 		contactDetails = "(EDIT CONTACT INFO)";  // temp insert for first time setup
 
@@ -1198,24 +1202,28 @@ public: // makes members accessible outside class{}
 	/// </summary>
 	/// <param name="allData">data in memory</param>
 	static int CreateNew(file* allData) {
-		string name = GetRawInput("Enter parent name : "); // raw input
-		string username; // reference of username
-		
-		// loop while getting unique username
-		bool usernameCopy = true; // loop bool
-		while (usernameCopy) { // loop while getting username
-			username = GetRawInput("Enter parent username : "); // raw input
-			usernameCopy = false; // assume not a copy
-			for (vector<string> v : *allData->loginData) { // foreach username
-				if (v[0] == username) { // if match
-					usernameCopy = true; // copy is true -> makes loop again
-					Error("Username already exists..."); // inform user
+
+		string rawParentNumber = GetRawInput("Enter parent number : ");
+		int parentNumber;
+		bool numberConfirm = true;
+		while (numberConfirm) {
+			try {
+				parentNumber = stoi(rawParentNumber);
+				numberConfirm = false;
+				for (vector<string> v : (*allData->loginData)) { // foreach student in memory / data
+					if (v[3] == std::to_string(parentNumber)) { // if match
+						numberConfirm = true; // restart loop
+					}
 				}
+				if (numberConfirm) {
+					Error("duplicate number already exists...");
+				}
+			}
+			catch (...) {
+				Error("Not a number...");
 			}
 		}
 
-		string password = GetRawInput("Enter parent password : "); // get password
-		
 		int studentNumber; // reference to student number
 		bool childInput = true;
 		while (childInput) { // loop child number input
@@ -1248,23 +1256,13 @@ public: // makes members accessible outside class{}
 			}
 		}
 
-		// store all variables and data into vector
-		vector<string> newLoginParent;
-		newLoginParent.push_back(username);
-		newLoginParent.push_back(password);
-		newLoginParent.push_back("parent");
-		newLoginParent.push_back(std::to_string(studentNumber));  // will change to parent number soon -> temp a number -> student number for timebeing
-
-		// add new vector of new info to login for parents in file and memory
-		allData->loginData->push_back(newLoginParent);
-		allData->SaveAll();
-
 		// TODO Get more info and store in parent file...
 		//-----------------------------------------------
+		string name = GetRawInput("Enter parent name : "); // raw input
 		
 		cout << "\nParent Created...\n\n"; // inform user
 
-		return 0; // TEMP -> TODO return parent number once stored in file properly
+		return parentNumber; // return parent unique number
 
 	}
 
@@ -1312,8 +1310,6 @@ public: // makes members accessible outside class{}
 	}
 };
 
-// -----------------------
-
 /// <summary>
 /// admin login
 /// </summary>
@@ -1328,7 +1324,7 @@ class admin {
 	/// </summary>
 	void CreateTeacher() {
 		int teacherNumber = teacher::CreateNew(allData); // creates teacher here
-
+		SignUp(allData, "teacher", teacherNumber);
 		// create login for teacher here
 	}
 
@@ -1337,14 +1333,14 @@ class admin {
 	/// </summary>
 	void CreateParent() {
 		int parentNumber = parent::CreateNew(allData); // creates parent
+		SignUp(allData, "parent", parentNumber);
 	}
 
 	/// <summary>
 	/// creates an admin
 	/// </summary>
 	void CreateAdmin() {
-		// Create Admin Login
-		// TODO create admin login
+		SignUp(allData, "admin");
 	}
 
 	/// <summary>
@@ -1359,6 +1355,7 @@ class admin {
 	/// </summary>
 	void CreateStudent() {
 		int studentNumber = student::CreateNew(allData);
+		SignUp(allData, "student", studentNumber);
 		// use studentNumber to create a login
 		// Create login for student here
 	}
@@ -1435,6 +1432,9 @@ class admin {
 			try {
 				int number = stoi(rawInput); // try convert input to int
 				teacher::DeleteTeacher(allData, number); // delete teacher with number
+
+				DeleteLogin(allData, number, "teacher");
+				pre = false;
 			}
 			catch (...) {
 				Error("Invalid Input..."); // catch conversion errors
@@ -1478,9 +1478,17 @@ class admin {
 
 			try {
 				parent::DeleteParent(allData, rawInput); // try deleting the parent with the given username
+				int number = 0;
+				for (vector<string> v : (*allData->loginData)) {
+					if (v[0] == rawInput) {
+						number = stoi(v[3]);
+						DeleteLogin(allData, number, "parent");
+					}
+				}
+				pre = false;
 			}
 			catch (...) {
-				Error("Deleting parent was not successful..."); // catch errors and inform user
+				Error("Deleting parent was NOT successful..."); // catch errors and inform user
 			}
 		}
 	}
@@ -1490,6 +1498,7 @@ class admin {
 	/// </summary>
 	void DeleteAdmin() {
 		// TODO Delete admin login
+		cout << "\nYou cannot delete admins...\n\n";
 	}
 
 	/// <summary>
@@ -1526,6 +1535,7 @@ class admin {
 			try {
 				int number = stoi(rawInput); // try convert raw input to int
 				classroom::DeleteClassroom(allData, number); // delete classroom with int
+				pre = false;
 			}
 			catch (...) {
 				Error("Invalid Input..."); // catch conversion error
@@ -1566,6 +1576,8 @@ class admin {
 			try {
 				int number = stoi(rawInput); // try convert input to int
 				student::DeleteStudent(allData, number); // delete student with int input
+				DeleteLogin(allData, number, "student");
+				pre = false;
 			}
 			catch (...) {
 				Error("Invalid Input..."); // catch conversion error
@@ -1865,6 +1877,16 @@ public:
 /// login information and functions
 /// </summary>
 class login {
+	enum class CURRENT_TYPE {
+		admin,
+		teacher,
+		parent,
+		student,
+		none
+	};
+
+	CURRENT_TYPE ct;
+
 public: // makes members accessible outside class{}
 	bool loggedIn; // bool for checking if logged in or not
 	union userType { // union for memory allocation of 1 / 4 types of login types
@@ -1881,6 +1903,7 @@ public: // makes members accessible outside class{}
 	/// </summary>
 	login()
 	{
+		ct = CURRENT_TYPE::none;
 		// reset union
 		type.null = new int;
 		delete type.null;
@@ -1903,6 +1926,9 @@ public: // makes members accessible outside class{}
 		bool found = false; // username match
 
 		for (int i = 0; i < attempts; i++) { // for 3 attempts
+			index = -1;
+			success = false;
+			found = false;
 			username = GetRawInput("Enter your Username: "); // raw input
 			for (int i = 0; (unsigned)i < (unsigned)(allFiles->loginData->size()); i++) { // for each stored login
 				vector<string> v = (*allFiles->loginData)[i];
@@ -1924,8 +1950,7 @@ public: // makes members accessible outside class{}
 					cout << "username or password wrong...\n"; // output if password isnt a match
 				}
 			}
-			
-			if(!success || !found){ // if not found username or no success
+			else if(!success || !found){ // if not found username or no success
 				cout << "username or password wrong...\n"; // output to user
 			}
 		}
@@ -1937,19 +1962,24 @@ public: // makes members accessible outside class{}
 			// set union to correct user type based on stored user type
 			if ((*allFiles->loginData)[index][2] == "admin") { // admin
 				type._admin = { new admin(allFiles) };  // admin
+				ct = CURRENT_TYPE::admin;
 			}
 			else if ((*allFiles->loginData)[index][2] == "teacher") { // teacher
 				type._teacher = { new teacher(allFiles, stoi((*allFiles->loginData)[index][3])) }; // teacher with number
+				ct = CURRENT_TYPE::teacher;
 			}
 			else if ((*allFiles->loginData)[index][2] == "parent") { // parent
 				type._parent = { new parent(allFiles, stoi((*allFiles->loginData)[index][3])) }; // parent with number
- 			}
+				ct = CURRENT_TYPE::parent;
+			}
 			else if ((*allFiles->loginData)[index][2] == "student") { // student
 				type._student = { new student(allFiles, stoi((*allFiles->loginData)[index][3])) }; // student with number
+				ct = CURRENT_TYPE::student;
 			}
 			else {
 				Error("Failed to login - user type not specified correctly\n" + (*allFiles->loginData)[index][1]); // if no type an error has occured
 				loggedIn = false; // invalidate login
+				ct = CURRENT_TYPE::none;
 			}
 
 		}
@@ -1967,19 +1997,23 @@ public: // makes members accessible outside class{}
 		loggedIn = false; // set state
 
 		// reset union
-		if (type._admin != NULL) {
+		if (ct == CURRENT_TYPE::admin) {
+			ct = CURRENT_TYPE::admin;
 			delete type._admin;
 			type._admin = nullptr;
 		}
-		else if (type._teacher != NULL) {
+		else if (ct == CURRENT_TYPE::teacher) {
+			ct = CURRENT_TYPE::teacher;
 			delete type._teacher;
 			type._teacher = nullptr;
 		}
-		else if (type._parent != NULL) {
+		else if (ct == CURRENT_TYPE::parent) {
+			ct = CURRENT_TYPE::parent;
 			delete type._parent;
 			type._parent = nullptr;
 		}
-		else if (type._student != NULL) {
+		else if (ct == CURRENT_TYPE::student) {
+			ct = CURRENT_TYPE::student;
 			delete type._student;
 			type._student = nullptr;
 		}
@@ -1995,19 +2029,19 @@ public: // makes members accessible outside class{}
 	/// </summary>
 	void Options() {
 		// display admin options if union has admin
-		if (type._admin != NULL) {
+		if (ct == CURRENT_TYPE::admin) {
 			type._admin->Options();
 		}
 		// display teacher options if union has teacher
-		if (type._teacher != NULL) {
+		if (ct == CURRENT_TYPE::teacher) {
 			type._teacher->Options();
 		}
 		// display parent options if union has parent
-		if (type._parent != NULL) {
+		if (ct == CURRENT_TYPE::parent) {
 			type._parent->Options();
 		}
 		// display student options if union has student
-		if (type._student != NULL) {
+		if (ct == CURRENT_TYPE::student) {
 			type._student->Options();
 		}
 	}
@@ -2023,21 +2057,48 @@ public: // makes members accessible outside class{}
 #pragma endregion
 
 #pragma region functions
+/// <summary>
+/// deletes a user from login file
+/// </summary>
+/// <param name="allData">data pointer</param>
+/// <param name="number">number identifier</param>
+/// <param name="type">user type</param>
+void DeleteLogin(file* allData, int number, string type) {
+	int index;
+	bool found = false;
+	for (int i = 0; (unsigned)i < (unsigned)(allData->loginData->size()); i++) {
+		if ((*allData->loginData)[i][2] == type) {
+			if ((*allData->loginData)[i][3] == std::to_string(number)) {
+				found = true;
+				index = i;
+			}
+		}
+	}
+	if (found) {
+		//((allData->loginData)[index].clear());
+		allData->LoadAll();
+		allData->loginData->erase(allData->loginData->begin() + index);
+		allData->SaveAll();
+	}
+	else {
+		Error("No login found to delete...");
+	}
+}
 
 /// <summary>
-/// Signs a user up
+/// signs a user up
 /// </summary>
 /// <param name="allFiles">data reference</param>
 /// <param name="userType">user type to sign up</param>
 void SignUp(file* allFiles, string userType, int number) {
-
+	Title("Sign Up : " + userType);
 	string username; // reference
 	string password; // reference
 
 	bool duplicate = true; // assume is dupe
 	while (duplicate) { // loop while duplicate username
-		username = GetRawInput("Enter your Username: "); // raw input
-		password = GetRawInput("Enter your Password: "); // raw input
+		username = GetRawInput("Enter Username: "); // raw input
+		password = GetRawInput("Enter Password: "); // raw input
 
 		duplicate = false; // assume not a duplicate
 
@@ -2057,6 +2118,9 @@ void SignUp(file* allFiles, string userType, int number) {
 	newUserLoginData.push_back(userType);
 	if (number != NULL) {
 		newUserLoginData.push_back(std::to_string(number)); // number from creation of type if possible
+	}
+	else {
+		newUserLoginData.push_back(std::to_string(69));
 	}
 
 	// push new user into data
@@ -2195,7 +2259,7 @@ int main()
 	const bool DEBUG = false; // debug for split functionallity testing 
 
 	if (DEBUG) { // if debugging testing
-		// debugging is done here
+
 	}
 	else { // otherwise run the actual program
 
@@ -2277,23 +2341,35 @@ int main()
 	return 0; // Exit the program with no issues
 }
 
+/*
+student->options
+- show options
+- get input for options
+- take appriate action
 
-// TODO:
-// Create Login -> CreateStudent -> Admin
-// Create Login -> CreateTeacher -> Admin
-// Create Login -> CreateAdmin  -> Admin
+parent->options
+- show options
+- get input for options
+- take appriate action
 
-// Delete Login -> DeleteAdmin -> Admin
-// Delete Login -> DeleteParent -> Admin
-// Delete Login -> DeleteStudent -> Admin
-// Delete Login -> DeleteTeacher -> Admin
+teacher->options
+- show options
+- get input for options
+- take appriate action
 
-// Show list -> Edit and Delete Any -> Admin
-// Show list classroom -> CreateNew -> Parent
+admin->options
+- edit student details
+- edit parent details
+- add new parent->get more info and store in parent file appropiately
+- delete parent -> delete parent from parent file
+- edit classroom
+- show list of parents
+- show list of parents
+- school details
+- show list of teachers
+- new option->edit logins
 
-// All Admin Edits??
 
-// Options for parent, teacher, student
-
-// Fix creating parent with the new file
-// main -> switch -> Change to login &&&& Sign up not just login
+main -> switch
+- change to login && &&Sign up---- not just login
+*/

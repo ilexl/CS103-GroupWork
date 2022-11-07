@@ -570,11 +570,55 @@ public:
 	/// <summary>
 	/// edits a student
 	/// </summary>
-	/// <param name="allData">all data in memory</param>
-	/// <param name="studentNumber">student number to edit</param>
-	static void EditStudent(file* allData, int studentNumber) {
-		// Load student
+	static void Edit(file* allData) {
+		// displaying all students based on user input
+		bool displayAllInput = true; // loop boolean
+		while (displayAllInput) {
+			string input = GetRawInput("Would you like to see a list of all students?\ny or n : "); // raw input
+			if (input == "y" || input == "Y") {
+				DisplayAllStudents(allData); // show all students if requested
+				displayAllInput = false; // stop loop
+			}
+			else if (input == "n" || input == "N") {
+				displayAllInput = false; // stop loop
+			}
+			else {
+				Error("Invalid Input..."); // inform user
+			}
+		}
+		
+		// getting valid student
+		bool getStudent = true; // loop boolean 
+		int studentTarget; // student number
+		while (getStudent) {
+			string input = GetRawInput("Enter Student Number or \'e\' to cancel: "); // raw input
+			try {
+				if (input == "e") { // exit input
+					cout << "\nStudent not edited\n\n"; // inform user
+					return; // exit function
+				}
 
+				studentTarget = stoi(input); // try convert string to int
+				getStudent = true; // assume student doesnt exist -> keep looping
+
+				for (vector<string> v : *allData->studentData) {
+					if (stoi(v[0]) == studentTarget) {
+						getStudent = false; // stop loop if exist
+					}
+				}
+				if (getStudent) { // if still doesnt exits
+					Error("Student not found..."); // inform user
+				}
+			}
+			catch (...) {
+				Error("Invalid Input...");
+			}
+		}
+
+		// Edit student report
+		// Edit student name
+		// Edit student login
+		// Edit student info???????
 
 
 	}
@@ -827,6 +871,13 @@ public: // makes members accessible outside the class{}
 		}
 
 		Error("Classroom not found..."); // error if no user was deleted
+	}
+
+	/// <summary>
+	/// edits a classroom
+	/// </summary>
+	static void Edit() {
+
 	}
 };
 
@@ -1159,6 +1210,13 @@ public: // makes members accessible outside class{}
 
 		Error("Teacher not found..."); // error if no teacher found
 	}
+
+	/// <summary>
+	/// edits a teacher
+	/// </summary>
+	static void Edit() {
+
+	}
 };
 
 /// <summary>
@@ -1308,6 +1366,13 @@ public: // makes members accessible outside class{}
 
 		Error("Parent not found..."); // error if no parent found to delete
 	}
+
+	/// <summary>
+	/// edits a parent
+	/// </summary>
+	static void Edit() {
+
+	}
 };
 
 /// <summary>
@@ -1337,13 +1402,6 @@ class admin {
 	}
 
 	/// <summary>
-	/// creates an admin
-	/// </summary>
-	void CreateAdmin() {
-		SignUp(allData, "admin");
-	}
-
-	/// <summary>
 	/// creates a classroom with input
 	/// </summary>
 	void CreateClassroom() {
@@ -1366,35 +1424,28 @@ class admin {
 	/// Edits a teacher
 	/// </summary>
 	void EditTeacher() {
-
+		teacher::Edit();
 	}
 
 	/// <summary>
 	/// Edits a parent
 	/// </summary>
 	void EditParent() {
-
-	}
-
-	/// <summary>
-	/// Edits an admin
-	/// </summary>
-	void EditAdmin() {
-
+		parent::Edit();
 	}
 
 	/// <summary>
 	/// Edits a classroom with input
 	/// </summary>
 	void EditClassroom() {
-
+		classroom::Edit();
 	}
 
 	/// <summary>
 	/// Edits a student with input
 	/// </summary>
 	void EditStudent() {
-
+		student::Edit(allData);
 	}
 #pragma endregion
 
@@ -1614,7 +1665,7 @@ public:
 			cout << "3. Teacher   Options\n";
 			cout << "4. Classroom Options\n";
 			cout << "5. School    Options\n";
-			cout << "6. Admin     Options\n";
+			cout << "6. Login     Options\n";
 		
 			string rawIn = GetRawInput("Selection : "); // raw input
 			cout << endl; // spacing
@@ -1813,35 +1864,25 @@ public:
 					}
 					break;
 				}
-				case 6: { // Show admin options
+				case 6: {
 					while (inSubMenu) { // loop sub menu parent options
 						// display options
-						cout << "Admin Options : \n";
+						cout << "Login Options : \n";
 						cout << "0. Back to admin menu\n";
-						cout << "1. Add New Admin\n";
-						cout << "2. Edit    Admin\n";
-						cout << "3. Delete  Admin\n";
+						cout << "1. Needs Implementing\n";
+
 
 						string rawInSub = GetRawInput("Selection : "); // raw input
 						int subSelection = stoi(rawInSub); // try convert to int -> error kick you out to admin menu
 						cout << endl; // spacing
 
 						switch (subSelection)
-						{ 
+						{
 						case 0: // back to admin menu
 							inSubMenu = false; // stop sub menu loop
 							break;
-						case 1: { // add admin
-							CreateAdmin(); // creates an admin
-							break;
-						}
-						case 2: { // edit admin
-							EditAdmin(); // edits and admin
-							break;
-						}
-						case 3: { // delete admin
-							DeleteAdmin(); // deletes an admin
-							break;
+						case 1: { // edit school 
+							cout << "EDIT LOGINS NEEDS IMPLEMENTING\n"; // TODO implement edit school info
 						}
 						default:// crash the program -> cause error input
 							string crashSub = "Im gonna crash the try (;"; // string not int
@@ -2259,6 +2300,7 @@ int main()
 	const bool DEBUG = false; // debug for split functionallity testing 
 
 	if (DEBUG) { // if debugging testing
+
 
 	}
 	else { // otherwise run the actual program

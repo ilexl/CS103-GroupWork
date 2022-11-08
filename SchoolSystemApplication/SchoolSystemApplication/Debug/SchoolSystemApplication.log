@@ -1,2 +1,3 @@
 ﻿  SchoolSystemApplication.cpp
-  SchoolSystemApplication.vcxproj -> C:\Users\270168960\OneDrive - UP Education\GitHub\CS103-GroupWork\SchoolSystemApplication\Debug\SchoolSystemApplication.exe
+D:\Yoobee Sync\GitHub\CS103-GroupWork\SchoolSystemApplication\SchoolSystemApplication\SchoolSystemApplication.cpp(2418,38): warning C4806: '!=': unsafe operation: no value of type 'bool' promoted to type 'int' can equal the given constant
+  SchoolSystemApplication.vcxproj -> D:\Yoobee Sync\GitHub\CS103-GroupWork\SchoolSystemApplication\Debug\SchoolSystemApplication.exe

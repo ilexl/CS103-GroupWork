@@ -18,6 +18,25 @@ File formats
 	[2] = loginType
 	[3] = number
 
-// Staff data
-
 // Parent data
+	[0] = parentNumber
+	[1] = studentNumber
+	[2] = parent name
+	[3] = emergency contact info
+	[4] = address
+	[5] = DOB
+	[6] = email
+
+
+// Teacher data
+	[0] = teacher number
+	[1] = teacher name
+	[2] = classroom number
+	[3] = gender -> as string
+	[4] = email
+	[5] = contact number
+	[6] = year teaching
+
+// School data
+	[0] = [0]school name, [1, 2, 3, ...]contact info...
+	[1] = [0, 1, 2, 3, ...]school notices

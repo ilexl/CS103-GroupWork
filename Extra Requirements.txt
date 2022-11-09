@@ -14,7 +14,7 @@ NZ School Information System
 •	Creating student record should include: (See Task 5)  
 3.Admin screen includes: 
 •	Admin can access the class records and parent’s records. 
-•	Report of the students who need help 
+•	
 •	Report of the students who are in progressing state 
 •	The report should include, classroom number, student full name, learning progress of each subject, teacher name and their parents contact number. 
 4. Parent registration screen should include 

@@ -1,0 +1,14 @@
+SchoolSystemApplication/.vs/
+SchoolSystemApplication/SchoolSystemApplication/Debug/
+SchoolSystemApplication/Debug/
+*.db
+*.suo
+*.pbd
+*.tlog
+*.exe
+*.recipe
+*.lastbuildstate
+*.ilk
+*.log
+*.obj
+*.idb

@@ -1,11 +1,17 @@
----------------------------------------------- Read Me ----------------------------------------------
-
-How to use:
+Read ME
 -----------------------------------------------------------------------------------------------------
 
-On launch -> Create and admin account and make a classroom.
+-----------------------------------------------------------------------------------------------------
+
+How to use:
+
+On launch -> Create and admin account and make a classroom
+
 ------------ IF NO CLASSROOMS ARE DETECTED THEN A RESET WILL BE INITIATED ON NEXT LAUCH -------------
+
 The admin SHOULD setup the school before letting other users use the program
+
+-----------------------------------------------------------------------------------------------------
 
 The admin account can be used to edit any information / logins / data.
 Admin can manage students, parents, teachers, classrooms, school info and logins
@@ -17,6 +23,6 @@ Teachers and admins can manage a student's reports.
 Teachers can view any information on anyone
 Teachers and admins can manage school notices
 
------------------------------------------------------------------------------------------------------
+
 
 -----------------------------------------------------------------------------------------------------

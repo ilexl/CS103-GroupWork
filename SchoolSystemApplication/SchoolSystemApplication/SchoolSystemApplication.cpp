@@ -809,9 +809,11 @@ public:
 
 		// loop through each student in memory
 		for (vector<string> v : *allData->studentData) {
-			if (v[0] == std::to_string(studentNumber)) { // look for matching student number
-				Error("Student already exists..."); // error if found
-				studentNumber = CreateNew(allData);
+			if (v.size() > 0) {
+				if (v[0] == std::to_string(studentNumber)) { // look for matching student number
+					Error("Student already exists..."); // error if found
+					studentNumber = CreateNew(allData, true);
+				}
 			}
 		}
 
@@ -825,6 +827,38 @@ public:
 		sv.push_back(studentName);
 		allData->studentData->push_back(sv);
 		allData->SaveAll();
+
+		return studentNumber; // return the student number of new student
+	}
+
+	/// <summary>
+	/// creates a new student
+	/// </summary>
+	/// <param name="allData">data stored in memory</param>
+	/// <returns>student number</returns>
+	static int CreateNew(file* allData, bool t) {
+		int studentNumber = 0; // allocate memory
+		bool studentNumCorrect = false; // assume number is invalid
+		while (studentNumCorrect == false) { // loop while number is invalid
+			string s = GetRawInput("Enter a new student number : "); // get raw input
+			try {
+				studentNumber = stoi(s); // try convert to number
+				studentNumCorrect = true; // if converted number is valid
+			}
+			catch (...) {
+				Error("INVALID INPUT"); // catch a conversion error
+			}
+		}
+
+		// loop through each student in memory
+		for (vector<string> v : *allData->studentData) {
+			if (v.size() > 0) {
+				if (v[0] == std::to_string(studentNumber)) { // look for matching student number
+					Error("Student already exists..."); // error if found
+					studentNumber = CreateNew(allData, true);
+				}
+			}
+		}
 
 		return studentNumber; // return the student number of new student
 	}
@@ -853,7 +887,7 @@ public:
 		for (vector<string> v : *allData->studentData) {
 			if (v[0] == std::to_string(studentNumber)) { // look for matching student number
 				Error("Student already exists..."); // error if found
-				studentNumber = CreateNew(allData);
+				studentNumber = CreateNew(allData, true);
 			}
 		}
 
@@ -1699,7 +1733,9 @@ public: // makes members accessible outside class{}
 		for (int i = 0; (unsigned)i < (unsigned)allData->loginData->size(); i++) { // foreach parent in data
 			vector<string> v = (*allData->loginData)[i];
 			if (v[3] == std::to_string(number)) { // if match
-				int index = 0;
+				int index = i;
+				allData->loginData->erase(allData->loginData->begin() + index);
+				index = 0;
 				for (vector<string> vP : (*allData->parentData)) {
 					if (vP[0] == std::to_string(number)) {
 						vP.clear();
@@ -1710,11 +1746,23 @@ public: // makes members accessible outside class{}
 					}
 					index++;
 				}
-
+				
 				// TODO delete parent data here
 				//---------------------------------------------------------------------------------------------
 
 			}
+		}
+
+		int index = 0;
+		for (vector<string> vP : (*allData->parentData)) {
+			if (vP[0] == std::to_string(number)) {
+				vP.clear();
+				allData->parentData->erase(allData->parentData->begin() + index);
+				allData->SaveAll();
+				cout << "\nParent Deleted...\n\n";
+				return true; // stop function from running
+			}
+			index++;
 		}
 
 

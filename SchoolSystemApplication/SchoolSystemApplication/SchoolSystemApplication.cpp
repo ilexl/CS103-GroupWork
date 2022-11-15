@@ -797,7 +797,7 @@ public:
 		int studentNumber = 0; // allocate memory
 		bool studentNumCorrect = false; // assume number is invalid
 		while (studentNumCorrect == false) { // loop while number is invalid
-			string s = GetRawInput("Enter a new student number : "); // get raw input
+			string s = GetRawInput("Enter a new student number (8 digits): "); // get raw input
 			try {
 				studentNumber = stoi(s); // try convert to number
 				studentNumCorrect = true; // if converted number is valid
@@ -840,7 +840,7 @@ public:
 		int studentNumber = 0; // allocate memory
 		bool studentNumCorrect = false; // assume number is invalid
 		while (studentNumCorrect == false) { // loop while number is invalid
-			string s = GetRawInput("Enter a new student number : "); // get raw input
+			string s = GetRawInput("Enter a new student number (8 digits): "); // get raw input
 			try {
 				studentNumber = stoi(s); // try convert to number
 				studentNumCorrect = true; // if converted number is valid
@@ -867,7 +867,7 @@ public:
 		int studentNumber = 0; // allocate memory
 		bool studentNumCorrect = false; // assume number is invalid
 		while (studentNumCorrect == false) { // loop while number is invalid
-			string s = GetRawInput("Enter a new student number : "); // get raw input
+			string s = GetRawInput("Enter a new student number (8 digits): "); // get raw input
 			try {
 				studentNumber = stoi(s); // try convert to number
 				if (parentNumber == studentNumber) {
@@ -1245,7 +1245,7 @@ public: // makes members accessible outside the class{}
 		int classroomNumber = 0; // allocate memory
 		bool classNumCorrect = false; // assume classroom number is incorrect
 		while (classNumCorrect == false) { // loop whiel classroom number is incorrect
-			string s = GetRawInput("Enter the new classroom number : "); // get raw input
+			string s = GetRawInput("Enter the new classroom number (8 digits): "); // get raw input
 			try {
 				classroomNumber = stoi(s); // try convert input into number
 				classNumCorrect = true; // if successful stop the loop -> classroom number is correct
@@ -1632,7 +1632,7 @@ public: // makes members accessible outside class{}
 			bool numberConfirm = true;
 			while (numberConfirm) {
 				try {
-					rawParentNumber = GetRawInput("Enter a new parent number : ");
+					rawParentNumber = GetRawInput("Enter a new parent number (8 digits): ");
 					parentNumber = stoi(rawParentNumber);
 					numberConfirm = false;
 					for (vector<string> v : (*allData->loginData)) { // foreach student in memory / data
@@ -2244,7 +2244,7 @@ public: // makes members accessible outside class{}
 		moreInfoNeeded = true; // loop
 		// number
 		while (moreInfoNeeded) { 
-			string in = GetRawInput("Enter teacher number : "); // raw input
+			string in = GetRawInput("Enter new teacher number (8 digits): "); // raw input
 			try {
 				int i = stoi(in); // try convert to int
 				teacherNumber = i; // store in variable
